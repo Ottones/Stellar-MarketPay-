@@ -1,0 +1,21 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "fix/issue-1860-replace-the-static-coverage-badge-with-measured",
+    "fix/issue-1871-synchronize-translation-keys-across-en-es-fr",
+    "main",
+    "origin"
+  ],
+  "parent": {
+    "fix/issue-1860-replace-the-static-coverage-badge-with-measured": "main",
+    "fix/issue-1871-synchronize-translation-keys-across-en-es-fr": "main",
+    "main": null,
+    "origin": "main"
+  },
+  "order": [
+    "main",
+    "fix/issue-1860-replace-the-static-coverage-badge-with-measured",
+    "fix/issue-1871-synchronize-translation-keys-across-en-es-fr",
+    "origin"
+  ]
+}

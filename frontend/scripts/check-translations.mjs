@@ -1,16 +1,21 @@
 #!/usr/bin/env node
 /**
- * Reports locale keys that were added to English but not translated yet.
+ * Reports locale keys that diverge from the English source.
  *
  * The command intentionally has no side effects: it never writes placeholder
  * strings into a translator-maintained locale file. CI runs this command with
- * `--strict`, making a missing or placeholder translation actionable.
+ * `--strict`, making a missing, unused, or placeholder translation actionable.
+ *
+ * Checks performed for every required locale:
+ *   - missing keys (added to English but not translated yet)
+ *   - unused keys (possed by the locale but not present in English)
+ *   - unfinished translations (containing the [TRANSLATE] placeholder)
  */
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPathName } from "node:url";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const root = path.resolve(path.dirname(fileURLToPathName(import.meta.url)), "..");
 const localesRoot = path.join(root, "public", "locales");
 const sourceLocale = "en";
 const requiredLocales = ["es", "fr", "pt"];
@@ -28,34 +33,62 @@ function flatten(object, prefix = "") {
   }, {});
 }
 
-const english = flatten(JSON.parse(fs.readFileSync(path.join(localesRoot, sourceLocale, "common.json"), "utf8")));
-let hasProblems = false;
-
-for (const locale of requiredLocales) {
+function readLocale(locale) {
   const filename = path.join(localesRoot, locale, "common.json");
   if (!fs.existsSync(filename)) {
-    console.warn(`::warning file=${filename}::Missing ${locale} locale file.`);
-    hasProblems = true;
+    return { filename, keys: null };
+  }
+  return { filename, keys: flatten(JSON.parse(fs.readFileSync(filename, "utf8"))) };
+}
+
+const source = readLocale(sourceLocale);
+if (!source.keys) {
+  console.error(`Unable to read the ${sourceLocale} source locale file at ${source.filename}.`);
+  process.exitCode = 1;
+  process.exit();
+}
+
+const sourceKeys = new Set(Object.keys(source.keys));
+let failed = false;
+
+for (const locale of requiredLocales) {
+  const { keys, filename } = readLocale(locale);
+  if (!keys) {
+    console.error(`[${locale}] Missing locale file: ${filename}`);
+    failed = true;
     continue;
   }
 
-  const translated = flatten(JSON.parse(fs.readFileSync(filename, "utf8")));
-  const missing = Object.keys(english).filter((key) => !(key in translated));
-  const placeholders = Object.entries(translated)
+  const localeKeys = new Set(Object.keys(keys));
+  const missing = [...sourceKeys].filter((k) => !localeKeys.has(k));
+  const unused = [...localeKeys].filter((key) => !sourceKeys.has(key));
+  const placeholders = Object.entries(keys)
     .filter(([, value]) => typeof value === "string" && value.includes("[TRANSLATE]"))
     .map(([key]) => key);
 
-  for (const key of missing) {
-    console.warn(`::warning file=${filename}::${locale} is missing translation key '${key}'.`);
+  if (missing.length > 0) {
+    console.warn(`[${locale}] Missing ${missing.length} key(s):`);
+    for (const key of missing) console.warn(`  ${key}`);
+    failed = true;
   }
-  for (const key of placeholders) {
-    console.warn(`::warning file=${filename}::${locale} has an unfinished translation for '${key}'.`);
+
+  if (unused.length > 0) {
+    console.warn(`[${locale}] Unused ${unused.length} key(s) not present in ${sourceLocale}:`);
+    for (const key of unused) console.warn(`  ${key}`);
+    failed = true;
   }
-  hasProblems ||= missing.length > 0 || placeholders.length > 0;
+
+  if (placeholders.length > 0) {
+    console.warn(`[${locale}] Unfinished translations (${placeholders.length}):`);
+    for (const key of placeholders) console.warn(`  ${key}`);
+    failed = true;
+  }
+
+  if (missing.length === 0 && unused.length === 0 && placeholders.length === 0) {
+    console.log(`[${locale}] OK`);
+  }
 }
 
-if (!hasProblems) {
-  console.log("All required locale files contain every English key and no translation placeholders.");
+if (failed && strict) {
+  process.exitCode = 1;
 }
-
-if (hasProblems && strict) process.exitCode = 1;
