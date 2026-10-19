@@ -6,7 +6,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Stellar](https://img.shields.io/badge/Stellar-Testnet-blue)](https://stellar.org)
 [![Soroban](https://img.shields.io/badge/Soroban-Smart%20Contracts-purple)](https://soroban.stellar.org)
-[![Backend Coverage](https://img.shields.io/badge/backend%20coverage-80%25%2B-brightgreen)](#testing)
+[![Backend Coverage](https://codecov.io/gh/Emmy123222/Stellar-MarketPay-/branch/main/graph/badge.svg?flag=backend)](https://codecov.io/gh/Emmy123222/Stellar-MarketPay-)
 
 Stellar MarketPay is an open-source decentralised freelance marketplace where clients post jobs, freelancers apply, and payments are secured in **Soroban smart contract escrow** — released automatically when work is approved. No middlemen. No payment delays. No platform fees eating your earnings..
 
@@ -218,6 +218,8 @@ For frontend development without a deployed Soroban contract:
 | Backend mutation tests | `cd backend && npm run stryker`                | Fails below the required 80% mutation score     |
 | E2E (Playwright)        | `cd frontend && npm run test:e2e`              | Includes full client/freelancer marketplace flow |
 
+Backend coverage is measured on every CI run and uploaded to [Codecov](https://codecov.io/gh/Emmy123222/Stellar-MarketPay-). The badge above reflects the latest `main` build; per-PR coverage deltas are posted as a Codecov comment on each pull request. See [TESTING.md](TESTING.md) for details on how the numbers are produced.
+
 Deploy or upgrade the Soroban escrow contract using [docs/contract-deployment.md](docs/contract-deployment.md).
 
 ---
@@ -231,6 +233,7 @@ Deploy or upgrade the Soroban escrow contract using [docs/contract-deployment.md
 - **[API Documentation](docs/api.md)** — Complete API reference
 - **[Contract Deployment](docs/contract-deployment.md)** — Deploy Soroban smart contracts
 - **[Prometheus Metrics](backend/docs/METRICS.md)** — Metrics reference, PromQL queries, cardinality bounds, and observability setup
+- **[Testing & Coverage](TESTING.md)** — How tests run in CI and where coverage numbers come from
 
 ## 🤝 Contributing
 
