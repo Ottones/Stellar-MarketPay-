@@ -226,8 +226,7 @@ jobs:
         run: npm test
 
       - name: Translation completeness
-        run: npm run i18n:check
-        continue-on-error: true
+        run: npm run i18n:check --strict
 
       - name: Build
         run: npm run build
